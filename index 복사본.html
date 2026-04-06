@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Philosophy</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:'Pretendard',sans-serif;
+  background:#f6f1e8;
+  color:#2b2b2b;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+canvas{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  z-index:-1;
+}
+
+.container{
+  max-width:720px;
+  padding:40px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+h1{
+  font-size:52px;
+  font-weight:600;
+  line-height:1.3;
+  margin-bottom:40px;
+  letter-spacing:-1px;
+}
+
+.typing{
+  border-right:2px solid #b23a2b;
+  padding-right:6px;
+  white-space:pre-wrap;
+  animation: blink .7s infinite;
+}
+
+@keyframes blink{
+  0%,100%{border-color:transparent}
+  50%{border-color:#b23a2b}
+}
+
+p{
+  font-size:17px;
+  line-height:2.1;
+  color:#444;
+  margin-bottom:32px;
+  max-width:620px;
+  opacity:0;
+  transform:translateY(20px);
+  animation:fadeUp .8s ease forwards;
+}
+
+p:nth-of-type(1){animation-delay:3.5s}
+p:nth-of-type(2){animation-delay:3.8s}
+p:nth-of-type(3){animation-delay:4.1s}
+p:nth-of-type(4){animation-delay:4.4s}
+p:nth-of-type(5){animation-delay:4.7s}
+
+.highlight{
+  color:#b23a2b;
+}
+
+@keyframes fadeUp{
+  to{opacity:1;transform:translateY(0)}
+}
+
+</style>
+</head>
+
+<body>
+<canvas id="bg"></canvas>
+
+<div class="container">
+
+<h1 class="typing" id="typing"></h1>
+
+<p>
+내가 생각하는 디자인은 단순한 시각적 결과물이 아니라
+<span class="highlight">의도와 구조가 자연스럽게 드러나는 흐름</span>이다.
+사용자는 그것을 의식하지 않지만,
+이미 그 안에서 경험하고 있어야 한다.
+</p>
+
+<p>
+나는 불필요한 요소를 덜어내고,
+최소한의 형태로 본질을 남기는 방식에 집중한다.
+그 과정에서 디자인은 더 명확해지고,
+사용자는 더 직관적으로 이해하게 된다.
+</p>
+
+<p>
+그리드와 타이포그래피는 단순한 정리가 아니라
+<span class="highlight">보이지 않는 질서를 만드는 도구</span>다.
+나는 그 질서를 통해 시선과 흐름을 설계한다.
+</p>
+
+<p>
+또한 감성은 과하게 드러나기보다
+잔잔하게 스며드는 것이 더 강력하다고 생각한다.
+디자인은 설명하기보다 느껴지도록 만들어야 한다.
+</p>
+
+<p>
+결국 내가 추구하는 디자인은
+<span class="highlight">조용하지만 분명하게 작동하는 것</span>,
+그리고 기능과 감성이 자연스럽게 이어지는 상태다.
+</p>
+
+</div>
+
+<script>
+/* typing */
+const text = "좋은 디자인은\n설명하지 않아도\n이해된다";
+const target = document.getElementById('typing');
+let i = 0;
+
+function type(){
+  if(i < text.length){
+    target.innerHTML += text[i] === "\n" ? "<br>" : text[i];
+    i++;
+    setTimeout(type, 90);
+  }
+}
+
+setTimeout(type, 400);
+
+/* bubble drawing */
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let mouse = {x: canvas.width/2, y: canvas.height/2};
+
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+
+let bubbles = [];
+
+let prevMouse = {x: mouse.x, y: mouse.y};
+
+for(let i=0;i<50;i++){
+  bubbles.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*10 + 4, // bigger bubbles
+    vx: (Math.random()-0.5)*1,
+    vy: (Math.random()-0.5)*1
+  });
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // mouse velocity
+  let mvx = mouse.x - prevMouse.x;
+  let mvy = mouse.y - prevMouse.y;
+
+  bubbles.forEach(b=>{
+    // strong mouse push (splash effect)
+    let dx = mouse.x - b.x;
+    let dy = mouse.y - b.y;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+
+    if(dist < 200){
+      b.vx += dx * 0.002 + mvx * 0.1;
+      b.vy += dy * 0.002 + mvy * 0.1;
+    }
+
+    // damping but lighter → more lively
+    b.vx *= 0.96;
+    b.vy *= 0.96;
+
+    b.x += b.vx;
+    b.y += b.vy;
+
+    // draw bubble
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(60,60,60,0.25)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // inner highlight
+    ctx.beginPath();
+    ctx.arc(b.x - b.r*0.3, b.y - b.r*0.3, b.r*0.35, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(178,58,43,0.18)';
+    ctx.fill();
+
+    // bounce
+    if(b.x < 0 || b.x > canvas.width) b.vx *= -1;
+    if(b.y < 0 || b.y > canvas.height) b.vy *= -1;
+  });
+
+  prevMouse.x = mouse.x;
+  prevMouse.y = mouse.y;
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+
+</body>
+</html>
